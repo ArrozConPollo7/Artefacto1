@@ -29,9 +29,11 @@ export default function PhotonicCenotaph({ scrollProgress, emissionIntensity }: 
     // ── Renderer ──────────────────────────────────────────────────────────────
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(W, H);
-    // Limit DPR on mobile to save GPU fill rate (max 1.5)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
-    renderer.shadowMap.enabled = true;
+    // Strict DPR limit on mobile to ensure fluid 60FPS
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.0 : 2));
+    
+    // Disable extremely expensive shadow maps completely on mobile
+    renderer.shadowMap.enabled = !isMobile;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.35;
@@ -216,34 +218,51 @@ export default function PhotonicCenotaph({ scrollProgress, emissionIntensity }: 
 
     // ── GLASS CUBE ────────────────────────────────────────────────────────────
     const S = 1.74;
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0xc0d4ef,
-      transparent: true,
-      opacity: 0.09,
-      roughness: isMobile ? 0.1 : 0.0,
-      metalness: 0.0,
-      transmission: 0.94,
-      thickness: isMobile ? 0.4 : 0.85,
-      ior: 1.52,
-      reflectivity: 1.0,
-      envMapIntensity: 2.5,
-      clearcoat: isMobile ? 0.5 : 1.0,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
+    
+    // Transmission (Screen-space refraction) forces the GPU to render the scene multiple times.
+    // On mobile, we use a standard transparent material instead for massive FPS gains.
+    const glassMat = isMobile 
+      ? new THREE.MeshStandardMaterial({
+          color: 0xc0d4ef,
+          transparent: true,
+          opacity: 0.15,
+          roughness: 0.1,
+          metalness: 0.8,
+          envMapIntensity: 2.5,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        })
+      : new THREE.MeshPhysicalMaterial({
+          color: 0xc0d4ef,
+          transparent: true,
+          opacity: 0.09,
+          roughness: 0.0,
+          metalness: 0.0,
+          transmission: 0.94,
+          thickness: 0.85,
+          ior: 1.52,
+          reflectivity: 1.0,
+          envMapIntensity: 2.5,
+          clearcoat: 1.0,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+        });
+
     const glass = new THREE.Mesh(new THREE.BoxGeometry(S,S,S), glassMat);
     glass.position.y = 0.08;
     root.add(glass);
 
     // Inner glass shell (back-side for thickness illusion)
-    const glassBk = new THREE.MeshPhysicalMaterial({
-      color: 0x5566aa, transparent: true, opacity: 0.06,
-      roughness: isMobile ? 0.05 : 0, 
-      transmission: 0.96, 
-      thickness: isMobile ? 0.15 : 0.3, 
-      ior: 1.52,
-      side: THREE.BackSide, depthWrite: false,
-    });
+    const glassBk = isMobile 
+      ? new THREE.MeshStandardMaterial({
+          color: 0x5566aa, transparent: true, opacity: 0.08,
+          roughness: 0.2, metalness: 0.8, side: THREE.BackSide, depthWrite: false,
+        })
+      : new THREE.MeshPhysicalMaterial({
+          color: 0x5566aa, transparent: true, opacity: 0.06,
+          roughness: 0, transmission: 0.96, thickness: 0.3, ior: 1.52,
+          side: THREE.BackSide, depthWrite: false,
+        });
     const glassInner = new THREE.Mesh(
       new THREE.BoxGeometry(S*0.984, S*0.984, S*0.984), glassBk
     );

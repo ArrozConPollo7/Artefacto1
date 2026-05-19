@@ -14,13 +14,14 @@ function ParticleField() {
     let W = (c.width = window.innerWidth);
     let H = (c.height = window.innerHeight);
 
-    const STAR_COUNT = 100;
+    const isMobile = window.innerWidth < 768;
+    const STAR_COUNT = isMobile ? 30 : 100;
     const stars = Array.from({ length: STAR_COUNT }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
       r: Math.random() * 1.1 + 0.2,
-      vx: (Math.random() - 0.5) * 0.12,
-      vy: (Math.random() - 0.5) * 0.12,
+      vx: (Math.random() - 0.5) * (isMobile ? 0.05 : 0.12),
+      vy: (Math.random() - 0.5) * (isMobile ? 0.05 : 0.12),
       alpha: Math.random() * 0.5 + 0.15,
     }));
 
@@ -36,19 +37,21 @@ function ParticleField() {
         ctx.fill();
       });
 
-      // Draw connecting lines between nearby stars
-      for (let i = 0; i < stars.length; i++) {
-        for (let j = i + 1; j < stars.length; j++) {
-          const dx = stars[i].x - stars[j].x;
-          const dy = stars[i].y - stars[j].y;
-          const d = Math.sqrt(dx * dx + dy * dy);
-          if (d < 110) {
-            ctx.beginPath();
-            ctx.moveTo(stars[i].x, stars[i].y);
-            ctx.lineTo(stars[j].x, stars[j].y);
-            ctx.strokeStyle = `rgba(255, 0, 51, ${0.05 * (1 - d / 110)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+      // Draw connecting lines between nearby stars (Disabled on mobile to save CPU)
+      if (!isMobile) {
+        for (let i = 0; i < stars.length; i++) {
+          for (let j = i + 1; j < stars.length; j++) {
+            const dx = stars[i].x - stars[j].x;
+            const dy = stars[i].y - stars[j].y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 110) {
+              ctx.beginPath();
+              ctx.moveTo(stars[i].x, stars[i].y);
+              ctx.lineTo(stars[j].x, stars[j].y);
+              ctx.strokeStyle = `rgba(255, 0, 51, ${0.05 * (1 - d / 110)})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
           }
         }
       }
@@ -101,6 +104,8 @@ function NoiseOverlay() {
 
   if (!src) return null;
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   return (
     <div
       style={{
@@ -110,8 +115,8 @@ function NoiseOverlay() {
         pointerEvents: "none",
         backgroundImage: `url(${src})`,
         backgroundRepeat: "repeat",
-        opacity: 0.35,
-        mixBlendMode: "overlay",
+        opacity: isMobile ? 0.08 : 0.35,
+        mixBlendMode: isMobile ? "normal" : "overlay",
       }}
     />
   );

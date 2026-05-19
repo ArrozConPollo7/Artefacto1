@@ -24,10 +24,13 @@ export default function PhotonicCenotaph({ scrollProgress, emissionIntensity }: 
     let W = mount.clientWidth;
     let H = mount.clientHeight;
 
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     // ── Renderer ──────────────────────────────────────────────────────────────
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Limit DPR on mobile to save GPU fill rate (max 1.5)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -90,6 +93,7 @@ export default function PhotonicCenotaph({ scrollProgress, emissionIntensity }: 
 
     // ── Root group ────────────────────────────────────────────────────────────
     const root = new THREE.Group();
+    root.scale.setScalar(isMobile ? 0.75 : 1.0); // Responsive scale for mobile screens
     scene.add(root);
     root.add(redCore);
     root.add(bluePoint);
@@ -216,13 +220,14 @@ export default function PhotonicCenotaph({ scrollProgress, emissionIntensity }: 
       color: 0xc0d4ef,
       transparent: true,
       opacity: 0.09,
-      roughness: 0.0,
+      roughness: isMobile ? 0.1 : 0.0,
       metalness: 0.0,
       transmission: 0.94,
-      thickness: 0.85,
+      thickness: isMobile ? 0.4 : 0.85,
       ior: 1.52,
       reflectivity: 1.0,
       envMapIntensity: 2.5,
+      clearcoat: isMobile ? 0.5 : 1.0,
       side: THREE.DoubleSide,
       depthWrite: false,
     });
@@ -233,7 +238,10 @@ export default function PhotonicCenotaph({ scrollProgress, emissionIntensity }: 
     // Inner glass shell (back-side for thickness illusion)
     const glassBk = new THREE.MeshPhysicalMaterial({
       color: 0x5566aa, transparent: true, opacity: 0.06,
-      roughness: 0, transmission: 0.96, thickness: 0.3, ior: 1.52,
+      roughness: isMobile ? 0.05 : 0, 
+      transmission: 0.96, 
+      thickness: isMobile ? 0.15 : 0.3, 
+      ior: 1.52,
       side: THREE.BackSide, depthWrite: false,
     });
     const glassInner = new THREE.Mesh(

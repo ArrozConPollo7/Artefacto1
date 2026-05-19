@@ -84,6 +84,7 @@ function TelemetryLog({ scrollProgress }) {
 
   return (
     <div
+      className="telemetry-log"
       style={{
         position: 'fixed',
         bottom: '3.5rem',
@@ -161,6 +162,8 @@ export default function ScrollContent({ scrollProgress, setEmissionIntensity }) 
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+
       // ─── 0. GLOBAL SCROLL PROGRESS TRACKER ───
       ScrollTrigger.create({
         trigger: containerRef.current,
@@ -269,20 +272,22 @@ export default function ScrollContent({ scrollProgress, setEmissionIntensity }) 
       // ─── SECTION 4: PROTOCOLO OPERATIVO (75 - 90%) ───
       const panel4 = section4Ref.current?.querySelector('.text-panel')
       if (panel4) {
-        ScrollTrigger.create({
-          trigger: section4Ref.current,
-          start: 'top top',
-          end: '+=130%',
-          pin: true,
-          pinSpacing: true,
-        })
+        if (isDesktop) {
+          ScrollTrigger.create({
+            trigger: section4Ref.current,
+            start: 'top top',
+            end: '+=130%',
+            pin: true,
+            pinSpacing: true,
+          })
+        }
 
         const tl4 = gsap.timeline({
           scrollTrigger: {
             trigger: section4Ref.current,
-            start: 'top top',
-            end: '+=130%',
-            scrub: 0.5,
+            start: isDesktop ? 'top top' : 'top 70%',
+            end: isDesktop ? '+=130%' : 'bottom 20%',
+            scrub: isDesktop ? 0.5 : false,
           },
         })
 
@@ -447,6 +452,7 @@ export default function ScrollContent({ scrollProgress, setEmissionIntensity }) 
 
             {/* Spec grid containing user's verbatim parameters */}
             <div
+              className="mobile-grid-fix"
               style={{
                 display: "grid", gridTemplateColumns: "1fr 1fr",
                 gap: "10px 24px", margin: "24px 0",
@@ -554,12 +560,12 @@ export default function ScrollContent({ scrollProgress, setEmissionIntensity }) 
 
         {/* ─── SECCIÓN 03: ANATOMÍA FORENSE (PINNED SLIDES) ─── */}
         <section ref={section3Ref} className="scroll-section" id="anatomy">
-          <div className="text-panel" style={{ minHeight: '520px', width: '560px', position: 'relative' }}>
+          <div className="text-panel anatomy-panel" style={{ position: 'relative', width: '100%', maxWidth: '560px' }}>
             <div className="line-accent" />
-            <p className="subtitle-hero" style={{ marginBottom: '5.5rem' }}>ESPECIFICACIONES DE HARDWARE // ANATOMÍA FORENSE</p>
+            <p className="subtitle-hero" style={{ marginBottom: '6rem' }}>ESPECIFICACIONES DE HARDWARE // ANATOMÍA FORENSE</p>
             
             {/* Slide 1: El Chasis */}
-            <div className="forensic-slide" style={{ position: 'absolute', left: '2.5rem', right: '2.5rem', top: '7.5rem', pointerEvents: 'none' }}>
+            <div className="forensic-slide" style={{ position: 'absolute', left: 0, right: 0, top: '8rem', padding: '0 2.5rem', pointerEvents: 'none' }}>
               <h3 className="headline-hero" style={{ fontSize: '1.6rem', color: '#fff' }}>
                 01. El Chasis de
                 <br />
@@ -571,7 +577,7 @@ export default function ScrollContent({ scrollProgress, setEmissionIntensity }) 
             </div>
 
             {/* Slide 2: El Contenedor Óptico */}
-            <div className="forensic-slide" style={{ position: 'absolute', left: '2.5rem', right: '2.5rem', top: '7.5rem', opacity: 0, pointerEvents: 'none' }}>
+            <div className="forensic-slide" style={{ position: 'absolute', left: 0, right: 0, top: '8rem', padding: '0 2.5rem', opacity: 0, pointerEvents: 'none' }}>
               <h3 className="headline-hero" style={{ fontSize: '1.6rem', color: '#fff' }}>
                 02. El Contenedor Óptico
                 <br />
@@ -583,7 +589,7 @@ export default function ScrollContent({ scrollProgress, setEmissionIntensity }) 
             </div>
 
             {/* Slide 3: El Núcleo Corrupto */}
-            <div className="forensic-slide" style={{ position: 'absolute', left: '2.5rem', right: '2.5rem', top: '7.5rem', opacity: 0, pointerEvents: 'none' }}>
+            <div className="forensic-slide" style={{ position: 'absolute', left: 0, right: 0, top: '8rem', padding: '0 2.5rem', opacity: 0, pointerEvents: 'none' }}>
               <h3 className="headline-hero" style={{ fontSize: '1.6rem', color: '#fff' }}>
                 03. El Núcleo Corrupto
                 <br />
